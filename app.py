@@ -199,38 +199,57 @@ def admin_user_details():
 
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
-    # Ensure the admin is logged in
-  
+    # Ensure the admin is logged in (add your authentication logic here)
+
+    # Get the date filter parameter from the request
+    date_filter = request.args.get('date', None)
+
     # Fetch data for visualization
     cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
+    # Build query condition for date filter
+    where_clause = "WHERE DATE(date) = %s" if date_filter else ""
+    query_params = [date_filter] if date_filter else []
+
     # Total work logs by machine (in hours)
-    cur.execute('SELECT machine, SUM(time_worked) as total_hours FROM work_logs GROUP BY machine')
+    cur.execute(f'''
+        SELECT machine, SUM(time_worked) as total_hours 
+        FROM work_logs
+        {where_clause}
+        GROUP BY machine
+    ''', query_params)
     machine_hours = cur.fetchall()
 
     # Total earnings by machine
-    cur.execute('SELECT machine, SUM(amount) as total_amount FROM work_logs GROUP BY machine')
+    cur.execute(f'''
+        SELECT machine, SUM(amount) as total_amount 
+        FROM work_logs
+        {where_clause}
+        GROUP BY machine
+    ''', query_params)
     machine_earnings = cur.fetchall()
 
     # Work logs per user (in hours)
-    cur.execute('SELECT user_name, SUM(time_worked) as total_hours FROM work_logs GROUP BY user_name')
+    cur.execute(f'''
+        SELECT user_name, SUM(time_worked) as total_hours 
+        FROM work_logs
+        {where_clause}
+        GROUP BY user_name
+    ''', query_params)
     user_hours = cur.fetchall()
 
     cur.close()
-
 
     # Prepare data for charts
     machine_hours_data = {
         "labels": [row['machine'] for row in machine_hours],
         "data": [row['total_hours'] for row in machine_hours]
     }
-    print("User Hours Data:", user_hours)
 
-
-    total_earnings = sum(row['total_amount'] for row in machine_earnings)
+    total_earnings = sum(row['total_amount'] for row in machine_earnings) or 1  # Avoid division by zero
     earnings_percentage_data = {
         "labels": [row['machine'] for row in machine_earnings],
-        "data": [(row['total_amount'] / total_earnings) * 100 for row in machine_earnings]
+        "data": [row['total_amount'] for row in machine_earnings]
     }
 
     user_hours_data = {
@@ -242,8 +261,10 @@ def dashboard():
         'dashboard.html',
         machine_hours_data=machine_hours_data,
         earnings_percentage_data=earnings_percentage_data,
-        user_hours_data=user_hours_data
+        user_hours_data=user_hours_data,
+        filters={"date": date_filter}
     )
+
 
 
 @app.route('/admin_index', methods=['GET'])

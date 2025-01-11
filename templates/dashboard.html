@@ -9,16 +9,26 @@
 <body>
     <h1>Admin Dashboard</h1>
 
+    <!-- Filter Form -->
+    <form method="GET" action="/dashboard" style="margin-bottom: 20px; text-align: center;">
+        <label for="date">Filter by Date:</label>
+        <input type="date" id="date" name="date" value="{{ filters.date or '' }}">
+        <button type="submit">Apply Filter</button>
+        {% if filters.date %}
+        <a href="/dashboard" style="margin-left: 10px; text-decoration: none;">Clear Filter</a>
+        {% endif %}
+    </form>
+
     <!-- Work Logs by Machine (Hours) -->
     <div style="width: 50%; margin: auto;">
         <h2>Work Logs by Machine (Hours)</h2>
         <canvas id="machineHoursChart"></canvas>
     </div>
 
-    <!-- Earnings by Machine (Percentage) -->
+    <!-- Earnings by Machine -->
     <div style="width: 50%; margin: auto;">
-        <h2>Earnings by Machine (Percentage)</h2>
-        <canvas id="earningsPercentageChart"></canvas>
+        <h2>Earnings by Machine (Amount)</h2>
+        <canvas id="earningsChart"></canvas>
     </div>
 
     <!-- Work Logs by User (Hours) -->
@@ -51,16 +61,16 @@
             }
         });
 
-        // Earnings by Machine (Percentage)
-        const earningsPercentageData = {{ earnings_percentage_data|tojson }};
-        const ctx2 = document.getElementById('earningsPercentageChart').getContext('2d');
+        // Earnings by Machine (Amount)
+        const earningsData = {{ earnings_percentage_data|tojson }};
+        const ctx2 = document.getElementById('earningsChart').getContext('2d');
         new Chart(ctx2, {
             type: 'pie',
             data: {
-                labels: earningsPercentageData.labels,
+                labels: earningsData.labels,
                 datasets: [{
-                    label: 'Percentage of Earnings',
-                    data: earningsPercentageData.data,
+                    label: 'Earnings',
+                    data: earningsData.data,
                     backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
                 }]
             },
