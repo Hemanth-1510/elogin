@@ -3,16 +3,20 @@ from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
 import MySQLdb.cursors
+import os
 app = Flask(__name__)
 
 # Configure MySQL
-app.config['MYSQL_USER'] = 'root' 
-app.config['MYSQL_HOST'] = 'localhost'
+# MySQL configuration
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
+app.config['MYSQL_PORT'] = int(os.getenv('MYSQL_PORT', 3306))  # Default to 3306 if not specified
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 
-app.config['MYSQL_PORT'] = 3000
-app.config['MYSQL_PASSWORD'] = '1234'  # Replace with your MySQL password
-app.config['MYSQL_DB'] = 'elogin'
 app.secret_key = secrets.token_hex(16)
+
+
 
 mysql = MySQL(app)
 
