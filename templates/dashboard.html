@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+
+    <!-- Work Logs by Machine (Hours) -->
+    <div style="width: 50%; margin: auto;">
+        <h2>Work Logs by Machine (Hours)</h2>
+        <canvas id="machineHoursChart"></canvas>
+    </div>
+
+    <!-- Earnings by Machine (Percentage) -->
+    <div style="width: 50%; margin: auto;">
+        <h2>Earnings by Machine (Percentage)</h2>
+        <canvas id="earningsPercentageChart"></canvas>
+    </div>
+
+    <!-- Work Logs by User (Hours) -->
+    <div style="width: 50%; margin: auto;">
+        <h2>Work Logs by User (Hours)</h2>
+        <canvas id="userHoursChart"></canvas>
+    </div>
+
+    <script>
+        // Work Logs by Machine (Hours)
+        const machineHoursData = {{ machine_hours_data|tojson }};
+        const ctx1 = document.getElementById('machineHoursChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: machineHoursData.labels,
+                datasets: [{
+                    label: 'Total Hours',
+                    data: machineHoursData.data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Earnings by Machine (Percentage)
+        const earningsPercentageData = {{ earnings_percentage_data|tojson }};
+        const ctx2 = document.getElementById('earningsPercentageChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: earningsPercentageData.labels,
+                datasets: [{
+                    label: 'Percentage of Earnings',
+                    data: earningsPercentageData.data,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
+        });
+
+        // Work Logs by User (Hours)
+        const userHoursData = {{ user_hours_data|tojson }};
+        const ctx3 = document.getElementById('userHoursChart').getContext('2d');
+        if (userHoursData.labels && userHoursData.labels.length > 0) {
+            new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: userHoursData.labels,
+                    datasets: [{
+                        label: 'Total Hours',
+                        data: userHoursData.data,
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        } else {
+            console.error("No user hours data available");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50; /* Green */
+            --secondary-color: #FF9800; /* Orange */
+            --blue-color: #007BFF; /* Blue */
+            --background-color: #f9f9f9;
+            --text-color: #333;
+            --white: #ffffff;
+            --hover-color: #45a049; /* Darker Green */
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            box-sizing: border-box;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 15px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        header .logo {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--background-color);
+        }
+
+        .form-box {
+            background-color: var(--white);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px var(--shadow-color);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .form-box h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .form-box input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .form-box button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .form-box button:hover {
+            background-color: var(--hover-color);
+            transform: scale(1.05);
+        }
+
+        .form-box p {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .form-box p a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .form-box p a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">MyWebsite</div>
+    </header>
+
+    <div class="form-container">
+        <div class="form-box">
+            <h2>User Login</h2>
+            <form action="/user-signin" method="POST">
+                <input type="email" name="email" placeholder="Email Address" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <p>Don't have an account? <a href="/user-signup">Sign Up</a></p>
+        </div>
+    </div>
+
+</body>
+</html>

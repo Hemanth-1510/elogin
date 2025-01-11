@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .filter-form {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-form label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .filter-form input, .filter-form select, .filter-form button {
+            margin: 5px 10px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .filter-form button {
+            background-color: #4CAF50;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .filter-form button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Dashboard</h1>
+        <p>Filter and view user work details.</p>
+
+        <!-- Filter Form -->
+        <form class="filter-form" method="GET" action="/admin_index">
+            <label for="user_name">User Name:</label>
+            <input type="text" id="user_name" name="user_name" placeholder="Enter user name">
+
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date">
+
+            <label for="machine">Machine:</label>
+            <select id="machine" name="machine">
+                <option value="">Select Machine</option>
+                <option value="70">70</option>
+                <option value="120">120</option>
+                <option value="JCB">JCB</option>
+            </select>
+
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" placeholder="Enter name">
+
+            <button type="submit">Filter</button>
+        </form>
+
+        <!-- Work Details Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>User Name</th>
+                    <th>Date</th>
+                    <th>Machine</th>
+                    <th>Name</th>
+                    <th>Place</th>
+                    <th>Work Details</th>
+                    <th>Time Worked (Minutes)</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for work in work_logs %}
+                <tr>
+                    <td>{{ work.user_name }}</td>
+                    <td>{{ work.date }}</td>
+                    <td>{{ work.machine }}</td>
+                    <td>{{ work.name }}</td>
+                    <td>{{ work.place }}</td>
+                    <td>{{ work.work_details }}</td>
+                    <td>{{ work.time_worked }}</td>
+                    <td>{{ work.amount }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+
+    </div>
+</body>
+</html>
