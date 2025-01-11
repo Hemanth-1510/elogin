@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Work Log</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 50%;
+            margin: 50px auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .time-difference {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Work Log</h1>
+        <form method="POST" action="/submit_work_log">
+            <label for="name">Full Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="place">Place:</label>
+            <input type="text" id="place" name="place" required>
+
+            <label for="phone">Phone Number:</label>
+            <input type="tel" id="phone" name="phone" required>
+
+            <label for="machine">Select Machine:</label>
+            <select id="machine" name="machine" required>
+                <option value="70">Machine 70</option>
+                <option value="120">Machine 120</option>
+                <option value="JCB">Machine JSCB</option>
+            </select>
+
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+
+            <label for="start_time">Work Start reading</label>
+            <input type="text" id="start_time" name="start_time" required>
+
+            <label for="end_time">Work End end reading</label>
+            <input type="text" id="end_time" name="end_time" required>
+            
+        <div class="time-difference" id="time-difference">
+            <!-- The time difference will be displayed here -->
+        </div>
+
+            <label for="work_details">Work Details:</label>
+            <textarea id="work_details" name="work_details" rows="4" placeholder="Describe the work done..." required></textarea>
+
+            <button type="submit">Submit Work Log</button>
+        </form>
+
+    </div>
+
+    <script>
+        // JavaScript to calculate the time difference
+        document.getElementById('start_time').addEventListener('change', calculateTimeDifference);
+        document.getElementById('end_time').addEventListener('change', calculateTimeDifference);
+
+        function calculateTimeDifference() {
+            var startTime = document.getElementById('start_time').value;
+            var endTime = document.getElementById('end_time').value;
+
+            if (startTime && endTime) {
+                
+                // Calculate difference in minutes
+                var diff = (parseInt(endTime) - parseInt(startTime));
+
+                
+
+                document.getElementById('time-difference').textContent = "Time Worked: " + diff + " minutes";
+            }
+        }
+    </script>
+
+</body>
+</html>
