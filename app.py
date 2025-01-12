@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 # Configure MongoDB
-uri = "mongodb+srv://addagadahemanth:Hemanth21@cluster0.iyynh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+uri = "mongodb+srv://addagadahemanth:Hemanth21@cluster0.iyynh.mongodb.net/elogin?retryWrites=true&w=majority&appName=Cluster0"
 client = MongoClient(uri)
 db = client['elogin']  # Replace with your database name
 
@@ -138,7 +138,7 @@ def submit_work_log():
 
     time_worked = end_time - start_time
     rates = {"70": 1700, "120": 2000, "JCB": 1800}
-    time_worked= time_worked/6
+    time_worked= time_worked/60
     amount = time_worked * rates.get(machine, 0)
 
     db.work_logs.insert_one({
