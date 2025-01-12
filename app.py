@@ -1,24 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 import secrets
-import MySQLdb.cursors
+from pymongo import MongoClient
 import os
+
 app = Flask(__name__)
 
-# Configure MySQL
-# MySQL configuration
-app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
-app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
-app.config['MYSQL_PORT'] = int(os.getenv('MYSQL_PORT', 3306))  # Default to 3306 if not specified
-app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
-app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
+# Configure MongoDB
+uri = "mongodb+srv://addagadahemanth:Hemanth21@cluster0.iyynh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+client = MongoClient(uri)
+db = client['elogin']  # Replace with your database name
 
 app.secret_key = secrets.token_hex(16)
-
-
-
-mysql = MySQL(app)
 
 @app.route('/')
 def index():
@@ -35,16 +28,21 @@ def user_signup():
         mobile_no = request.form['mobile']
         place = request.form['place']
         admin_name = request.form['adminname']
-        
+
         # Hash the password
         hashed_password = generate_password_hash(password)
 
-        cursor = mysql.connection.cursor()
-        cursor.execute("INSERT INTO users (full_name,user_name, email, user_password, mobile_no, place,admin_name) VALUES (%s, %s, %s, %s, %s, %s,%s)", 
-                       (full_name, user_name, email,hashed_password, mobile_no, place,admin_name))
-        mysql.connection.commit()
-        cursor.close()
-        
+        # Insert user into MongoDB
+        db.users.insert_one({
+            "full_name": full_name,
+            "user_name": user_name,
+            "email": email,
+            "user_password": hashed_password,
+            "mobile_no": mobile_no,
+            "place": place,
+            "admin_name": admin_name
+        })
+
         flash('User registered successfully!', 'success')
         return render_template('user_signin.html')
     return render_template('user_signup.html')
@@ -55,17 +53,12 @@ def user_signin():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-        user = cursor.fetchone()
-        cursor.close()
+
+        user = db.users.find_one({"email": email})
 
         if user and check_password_hash(user['user_password'], password):
-            # Store user information in session
-            session['user_id'] = user['user_id']  # Replace 'id' with the actual column name for the user ID
+            session['user_id'] = str(user['_id'])
             session['user_name'] = user['user_name']
-              # Replace 'user_name' with the actual column name for the username
             flash('User login successful!', 'success')
             return render_template('user_index.html')
         else:
@@ -78,40 +71,41 @@ def user_signin():
 def admin_signup():
     if request.method == 'POST':
         full_name = request.form['fullname']
-        user_name =request.form['username']
+        user_name = request.form['username']
         email = request.form['email']
         admin_password = request.form['password']
-        
-        
-        
+
         # Hash the password
         hashed_password = generate_password_hash(admin_password)
 
-        cursor = mysql.connection.cursor()
-        cursor.execute("INSERT INTO admins (full_name, user_name, email,admin_password) VALUES (%s, %s, %s, %s)", 
-                       (full_name,user_name, email, hashed_password))
-        mysql.connection.commit()
-        cursor.close()
-        
+        # Insert admin into MongoDB
+        db.admins.insert_one({
+            "full_name": full_name,
+            "user_name": user_name,
+            "email": email,
+            "admin_password": hashed_password
+        })
+
         flash('Admin registered successfully!', 'success')
-        return  render_template('admin_signin.html')
+        return render_template('admin_signin.html')
     return render_template('admin_signup.html')
 
 # Admin Login Route
+
 @app.route('/admin-signin', methods=['GET', 'POST'])
 def admin_signin():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        
-        cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM admins WHERE email = %s", (email,))
-        
-        cursor.close()
 
-        if email == "example@gmail.com" and password == "1234":  # admin[2] is the password field
-            
-             # Store admin ID in session
+        # Hardcoded admin credentials
+        hardcoded_email = "example@gmail.com"
+        hardcoded_password = "1234"
+
+        if email == hardcoded_email and password == hardcoded_password:
+            # Store admin details in the session
+            session['admin_id'] = "1"  # Assign a dummy admin ID
+            session['admin_name'] = "Super Admin"
             flash('Admin login successful!', 'success')
             return render_template('admin_user_details.html')
         else:
@@ -119,189 +113,126 @@ def admin_signin():
             return render_template('admin_signin.html')
     return render_template('admin_signin.html')
 
+
 # Logout Route
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Logged out successfully!', 'success')
-    return  render_template('home.html')
+    return render_template('home.html')
 
 @app.route('/submit_work_log', methods=['POST'])
 def submit_work_log():
-    if request.method == 'POST':
-        # Ensure the user is logged in
-        if 'user_id' not in session or 'user_name' not in session:
-            flash('You need to log in first!', 'danger')
-            return redirect('/user-signin')
-
-        # Get form data
-        name = request.form['name']
-        place = request.form['place']
-        phone = request.form['phone']
-        machine = request.form['machine']  # Get selected machine
-        date = request.form['date']
-        start_time = request.form['start_time']
-        end_time = request.form['end_time']
-        work_details = request.form['work_details']
-        
-        # Calculate time worked and amount
-        time_worked = float(end_time) - float(start_time)
-        if machine == '70':
-            amount = time_worked * 1700
-        elif machine == '120':
-            amount = time_worked * 2000
-        elif machine == 'JCB':
-            amount = time_worked  * 1800
-        else:
-            amount = 0
-
-        # Get user information from session
-        user_id = session['user_id']
-        user_name = session['user_name']
-
-        # Insert work log into the database
-        cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cur.execute('''
-            INSERT INTO work_logs (name, place, phone, machine, date, start_time, end_time, work_details, time_worked, user_name, user_id, amount)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (name, place, phone, machine, date, start_time, end_time, work_details, time_worked, user_name, user_id, amount))
-        mysql.connection.commit()
-        cur.close()
-
-        flash('Work log submitted successfully!', 'success')
-        return render_template('user_index.html')
-    
-@app.route('/admin_user_details', methods=['GET', 'POST'])
-def admin_user_details():
-    # Ensure the admin is logged in
-    if 'user_name' not in session:
+    if 'user_id' not in session or 'user_name' not in session:
         flash('You need to log in first!', 'danger')
-        return redirect('/admin_signin')
+        return redirect('/user-signin')
 
-    admin_name = session['user_name']
+    name = request.form['name']
+    place = request.form['place']
+    phone = request.form['phone']
+    machine = request.form['machine']
+    date = request.form['date']
+    start_time = float(request.form['start_time'])
+    end_time = float(request.form['end_time'])
+    work_details = request.form['work_details']
 
-    print(f"Admin Name from session: {admin_name}")
+    time_worked = end_time - start_time
+    rates = {"70": 1700, "120": 2000, "JCB": 1800}
+    time_worked= time_worked/6
+    amount = time_worked * rates.get(machine, 0)
 
-    # Query the database for users associated with this admin
-    cur = mysql.connection.cursor()
-    cur.execute('''
-        SELECT full_name, email, mobile_no, place, created_at
-        FROM users
-        WHERE admin_name = %s
-    ''', (admin_name,))
-    
-    users = cur.fetchall()
-    cur.close()
+    db.work_logs.insert_one({
+        "name": name,
+        "place": place,
+        "phone": phone,
+        "machine": machine,
+        "date": date,
+        "start_time": start_time,
+        "end_time": end_time,
+        "work_details": work_details,
+        "time_worked": time_worked,
+        "user_name": session['user_name'],
+        "user_id": session['user_id'],
+        "amount": amount
+    })
 
-    # Check if users were found
-    if not users:
-        flash('No users found for this admin.', 'warning')
+    flash('Work log submitted successfully!', 'success')
+    return render_template('user_index.html')
 
-    # Render the admin view template
+@app.route('/admin_user_details', methods=['GET'])
+def admin_user_details():
+    if 'admin_name' not in session:
+        flash('You need to log in first!', 'danger')
+        return redirect('/admin-signin')
+
+    admin_name = session['admin_name']
+    users = list(db.users.find({"admin_name": admin_name}, {"_id": 0}))
+
     return render_template('admin_user_details.html', users=users, admin_name=admin_name)
-
 
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
-    # Ensure the admin is logged in (add your authentication logic here)
+    date_filter = request.args.get('date')
+    query = {"date": date_filter} if date_filter else {}
 
-    # Get the date filter parameter from the request
-    date_filter = request.args.get('date', None)
+    machine_hours = list(db.work_logs.aggregate([
+        {"$match": query},
+        {"$group": {"_id": "$machine", "total_hours": {"$sum": "$time_worked"}}}
+    ]))
 
-    # Fetch data for visualization
-    cur = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    machine_earnings = list(db.work_logs.aggregate([
+        {"$match": query},
+        {"$group": {"_id": "$machine", "total_amount": {"$sum": "$amount"}}}
+    ]))
 
-    # Build query condition for date filter
-    where_clause = "WHERE DATE(date) = %s" if date_filter else ""
-    query_params = [date_filter] if date_filter else []
-
-    # Total work logs by machine (in hours)
-    cur.execute(f'''
-        SELECT machine, SUM(time_worked) as total_hours 
-        FROM work_logs
-        {where_clause}
-        GROUP BY machine
-    ''', query_params)
-    machine_hours = cur.fetchall()
-
-    # Total earnings by machine
-    cur.execute(f'''
-        SELECT machine, SUM(amount) as total_amount 
-        FROM work_logs
-        {where_clause}
-        GROUP BY machine
-    ''', query_params)
-    machine_earnings = cur.fetchall()
-
-    # Work logs per user (in hours)
-    cur.execute(f'''
-        SELECT user_name, SUM(time_worked) as total_hours 
-        FROM work_logs
-        {where_clause}
-        GROUP BY user_name
-    ''', query_params)
-    user_hours = cur.fetchall()
-
-    cur.close()
-
-    # Prepare data for charts
-    machine_hours_data = {
-        "labels": [row['machine'] for row in machine_hours],
-        "data": [row['total_hours'] for row in machine_hours]
-    }
-
-    total_earnings = sum(row['total_amount'] for row in machine_earnings) or 1  # Avoid division by zero
-    earnings_percentage_data = {
-        "labels": [row['machine'] for row in machine_earnings],
-        "data": [row['total_amount'] for row in machine_earnings]
-    }
-
-    user_hours_data = {
-        "labels": [row['user_name'] for row in user_hours],
-        "data": [row['total_hours'] for row in user_hours]
-    }
+    user_hours = list(db.work_logs.aggregate([
+        {"$match": query},
+        {"$group": {"_id": "$user_name", "total_hours": {"$sum": "$time_worked"}}}
+    ]))
 
     return render_template(
         'dashboard.html',
-        machine_hours_data=machine_hours_data,
-        earnings_percentage_data=earnings_percentage_data,
-        user_hours_data=user_hours_data,
+        machine_hours_data={"labels": [x["_id"] for x in machine_hours], "data": [x["total_hours"] for x in machine_hours]},
+        earnings_percentage_data={"labels": [x["_id"] for x in machine_earnings], "data": [x["total_amount"] for x in machine_earnings]},
+        user_hours_data={"labels": [x["_id"] for x in user_hours], "data": [x["total_hours"] for x in user_hours]},
         filters={"date": date_filter}
     )
-
+    
 
 
 @app.route('/admin_index', methods=['GET'])
 def admin_index():
+    # Ensure the admin is logged in
+    if 'admin_name' not in session:
+        flash('You need to log in first!', 'danger')
+        return redirect('/admin-signin')
+
+    # Get filter parameters from the request
     user_name = request.args.get('user_name')
     date = request.args.get('date')
     machine = request.args.get('machine')
     name = request.args.get('name')
 
-    query = "SELECT * FROM work_logs WHERE 1=1";  # Base query to fetch all work logs
-
-    # Apply filters if provided
-    params = []
+    # Build query filters dynamically
+    query = {}
     if user_name:
-        query += " AND user_name LIKE %s"
-        params.append(f"%{user_name}%")
+        query['user_name'] = {"$regex": user_name, "$options": "i"}  # Case-insensitive regex
     if date:
-        query += " AND date = %s"
-        params.append(date)
+        query['date'] = date
     if machine:
-        query += " AND machine = %s"
-        params.append(machine)
+        query['machine'] = machine
     if name:
-        query += " AND name LIKE %s"
-        params.append(f"%{name}%")
+        query['name'] = {"$regex": name, "$options": "i"}  # Case-insensitive regex
 
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute(query, tuple(params))
-    work_logs = cursor.fetchall()
-    cursor.close()
-    # Dynamically calculate amount if missing # Append the amount to the tuple
+    # Fetch work logs from MongoDB
+    work_logs = list(db.work_logs.find(query))
 
-# Now updated_work_logs contains tuples with the 'amount' appended at the end
+    # Add computed fields (if needed)
+    for log in work_logs:
+        log['time_worked'] = log.get('end_time', 0) - log.get('start_time', 0)
+        rates = {"70": 1700, "120": 2000, "JCB": 1800}
+        log['amount'] = log['time_worked'] * rates.get(log.get('machine'), 0)
+
     return render_template('admin_index.html', work_logs=work_logs)
 
 
