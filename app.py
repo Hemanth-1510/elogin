@@ -138,7 +138,7 @@ def submit_work_log():
 
     time_worked = end_time - start_time
     rates = {"70": 1700, "120": 2000, "JCB": 1800}
-    time_worked= time_worked/60
+    time_worked= time_worked
     amount = time_worked * rates.get(machine, 0)
 
     db.work_logs.insert_one({
